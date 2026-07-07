@@ -1,6 +1,6 @@
 import { Badge, Box, Button, Card, Combobox, Container, Group, Input, InputBase, Slider, Text, Textarea, TextInput, useCombobox } from "@mantine/core";
 import { useForm } from '@mantine/form';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const LoremIpusmPage = () => {
     const [paragraphvalue, setParagraphValue] = useState(25);
@@ -32,6 +32,12 @@ const LoremIpusmPage = () => {
             // email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
         },
     });
+
+    useEffect(() => {
+        const el = document.getElementById("out");
+        if (el) el.innerHTML = textValue;
+    }, [textValue]);
+
     const filteredOptions = shouldFilterOptions
         ? tags.filter((item) => item.toLowerCase().includes(tagValue.toLowerCase().trim()))
         : tags;
@@ -52,10 +58,59 @@ const LoremIpusmPage = () => {
         </Combobox.Option>
     ));
 
-    const handleSubmit =() =>{
-        const values = {pCount : paragraphvalue, wordCount : wordsValue, tag: tagValue, isHtml: htmlValue === "Yes"?true:false};
+    function generateWords(numWords) {
+
+        // Lorem Ipsum text for demonstration purposes
+        const loremIpsumText =
+            `Lorem ipsum dolor sit amet, consectetur 
+        adipiscing elit, sed do eiusmod tempor 
+        incididunt ut labore et dolore magna 
+        aliqua. Diam in arcu cursus euismod 
+        quis viverra nibh. Nunc aliquet bibendum
+        enim facilisis gravida neque convallis 
+        a cras. Sagittis purus sit amet volutpat
+        Consequat mauris. Duis ultricies lacus 
+        sed turpis tincidunt id. Consequat interdum
+        varius sit amet mattis vulputate. Enim sed
+        faucibus turpis in eu. Ridiculus mus mauris
+        vitae ultricies leo integer malesuada nunc vel.
+        Nulla pharetra diam sit amet nisl suscipit.
+        Lobortis elementum nibh tellus molestie nunc
+        non blandit massa enim. Dis parturient montes
+        nascetur ridiculus mus. Justo nec ultrices dui
+        sapien eget. Enim tortor at auctor urna nunc.
+        Dictumst quisque sagittis purus sit amet volutpat
+        consequat mauris nunc.`;
+
+
+        // Split the Lorem Ipsum text into words
+        const words =
+            loremIpsumText.split(" ");
+
+        // Ensure the number of words requested is 
+        // within the bounds of the available words
+        if (numWords <= words.length) {
+            return words
+                .slice(0, numWords)
+                .join(" ");
+        } else {
+            return words.join(" ");
+        }
+    }
+    const handleSubmit = () => {
+        const values = { pCount: paragraphvalue, wordCount: wordsValue, tag: tagValue, isHtml: htmlValue === "Yes" ? true : false };
+        const loremIpsumArray = new Array(values.pCount).fill("");
         // const wordCount = loremText.trim().split(/\s+/).length; // need to do some work
-        console.log(values);
+        // console.log(values);
+
+        for (let i = 0; i < values.pCount; i++) {
+            const words = generateWords(values.wordCount);
+            loremIpsumArray[i] =
+                values.isHtml ? `<${values.tag}>${words}</${values.tag}>` : words;
+        }
+        setTextValue(loremIpsumArray.join("\n"));
+
+        // console.log(loremIpsumArray.join("\n"));
     }
     return (
         <div>
@@ -73,7 +128,7 @@ const LoremIpusmPage = () => {
 
                 <Card shadow="sm" padding="lg" withBorder mt={10}>
                     <Card.Section>
-                        <form onSubmit={form.onSubmit( handleSubmit)}>
+                        <form onSubmit={form.onSubmit(handleSubmit)}>
                             <Box maw={400} mx="auto">
                                 <Text size="md" mt="xl" >Paragraphs</Text>
                                 <Slider key={form.key("pCount")} {...form.getInputProps("pCount",)} value={paragraphvalue} max={50} onChange={setParagraphValue} onChangeEnd={setEndParagraphValue} />
@@ -162,12 +217,9 @@ const LoremIpusmPage = () => {
                             </Box>
                         </form>
                         <Box maw={700} mx="auto" mt={10} mb={10}>
-                            <Textarea
-                                value={textValue}
-                                minRows={4}
-                                autosize
-                            // onChange={(event) => setValue(event.currentTarget.value)}
-                            />
+                            <div id="out">
+
+                            </div>
                         </Box>
 
                     </Card.Section>
